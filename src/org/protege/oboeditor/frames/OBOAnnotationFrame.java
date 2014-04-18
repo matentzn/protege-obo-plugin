@@ -4,6 +4,7 @@ import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.ui.frame.AbstractOWLFrame;
 import org.protege.oboeditor.util.OBOVocabulary;
 import org.semanticweb.owlapi.model.OWLAnnotationSubject;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 
 /**
  * @author Simon Jupp
@@ -15,17 +16,21 @@ public class OBOAnnotationFrame extends AbstractOWLFrame<OWLAnnotationSubject> {
 
     public OBOAnnotationFrame(OWLEditorKit man) {
         super(man.getModelManager().getOWLOntologyManager());
-        addSection(new OBOAnnotationFrameSection(man, this, "Definition",
-                man.getModelManager().getOWLDataFactory().getOWLAnnotationProperty(OBOVocabulary.DEFINITION.getIRI())));
+        
+        final OWLDataFactory factory = man.getModelManager().getOWLDataFactory();
+        
+		addSection(new OBOAnnotationFrameSection(man, this, "Definition",
+                factory.getOWLAnnotationProperty(OBOVocabulary.DEFINITION.getIRI()), 1, true));
         addSection(new OBOAnnotationFrameSection(man, this, "Exact synonym",
-                man.getModelManager().getOWLDataFactory().getOWLAnnotationProperty(OBOVocabulary.HAS_EXACT_SYNONYM.getIRI())));
+                factory.getOWLAnnotationProperty(OBOVocabulary.HAS_EXACT_SYNONYM.getIRI()), -1, true));
         addSection(new OBOAnnotationFrameSection(man, this, "Related synonym",
-                man.getModelManager().getOWLDataFactory().getOWLAnnotationProperty(OBOVocabulary.HAS_RELATED_SYNONYM.getIRI())));
+                factory.getOWLAnnotationProperty(OBOVocabulary.HAS_RELATED_SYNONYM.getIRI()), -1, true));
         addSection(new OBOAnnotationFrameSection(man, this, "Broad synonym",
-                man.getModelManager().getOWLDataFactory().getOWLAnnotationProperty(OBOVocabulary.HAS_BROAD_SYNONYM.getIRI())));
+                factory.getOWLAnnotationProperty(OBOVocabulary.HAS_BROAD_SYNONYM.getIRI()), -1, true));
         addSection(new OBOAnnotationFrameSection(man, this, "Narrow synonym",
-                man.getModelManager().getOWLDataFactory().getOWLAnnotationProperty(OBOVocabulary.HAS_NARROW_SYNONYM.getIRI())));
-
+                factory.getOWLAnnotationProperty(OBOVocabulary.HAS_NARROW_SYNONYM.getIRI()), -1, true));
+        addSection(new OBOAnnotationFrameSection(man, this, "Comment",
+                factory.getRDFSComment(), 1, false));
         refill();
     }
 }

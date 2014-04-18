@@ -17,13 +17,17 @@ import java.util.List;
  */
 public class OBOAnnotationsFrameSectionRow extends AbstractOWLFrameSectionRow<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> {
 
-    private OWLAnnotationProperty property;
+    private final OWLAnnotationProperty property;
+    private final boolean allowXrefs;
+    
     public OBOAnnotationsFrameSectionRow(OWLEditorKit owlEditorKit,
     									 OWLFrameSection<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> section,
     									 OWLOntology ontology,
-                                         OWLAnnotationSubject rootObject, OWLAnnotationAssertionAxiom axiom) {
+                                         OWLAnnotationSubject rootObject, OWLAnnotationAssertionAxiom axiom,
+                                         boolean allowXrefs) {
         super(owlEditorKit, section, ontology, rootObject, axiom);
         this.property = axiom.getProperty();
+        this.allowXrefs = allowXrefs;
     }
 
 
@@ -51,5 +55,9 @@ public class OBOAnnotationsFrameSectionRow extends AbstractOWLFrameSectionRow<OW
      */
     public List<OWLAnnotation> getManipulatableObjects() {
         return getObjects();
+    }
+    
+    public boolean isAllowXrefs() {
+    	return allowXrefs;
     }
 }

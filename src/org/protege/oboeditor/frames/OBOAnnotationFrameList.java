@@ -222,8 +222,13 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
         java.util.List<MListButton> buttons = new ArrayList<MListButton>(super.getButtons(value));
         if (value instanceof OWLFrameSectionRow) {
             OWLFrameSectionRow frameRow = (OWLFrameSectionRow) value;
-            buttons.add(axiomAnnotationButton);
-            axiomAnnotationButton.setAnnotationPresent(isAnnotationPresent(frameRow));
+            if (frameRow instanceof OBOAnnotationsFrameSectionRow) {
+				OBOAnnotationsFrameSectionRow oboRow = (OBOAnnotationsFrameSectionRow) frameRow;
+				if (oboRow.isAllowXrefs()) {
+					 buttons.add(axiomAnnotationButton);
+			         axiomAnnotationButton.setAnnotationPresent(isAnnotationPresent(frameRow));
+				}
+			}
 
             if (getExplanationManager().hasExplanation(frameRow.getAxiom())) {
                 buttons.addAll(inferredRowButtons);

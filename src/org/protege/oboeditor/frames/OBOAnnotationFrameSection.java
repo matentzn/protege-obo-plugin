@@ -19,17 +19,21 @@ import java.util.*;
 public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> {
 
     private String LABEL;
+    private final int maxCardinality;
+    private final boolean allowXrefs;
 
     private static OWLAnnotationSectionRowComparator comparator;
 
-    OWLAnnotationProperty property;
+    final OWLAnnotationProperty property;
 
 
-    public OBOAnnotationFrameSection(OWLEditorKit editorKit, OWLFrame<? extends OWLAnnotationSubject> frame, String label, OWLAnnotationProperty property) {
+    public OBOAnnotationFrameSection(OWLEditorKit editorKit, OWLFrame<? extends OWLAnnotationSubject> frame, String label, OWLAnnotationProperty property, int max, boolean allowXrefs) {
         super(editorKit, label, "Entity annotation", frame);
         this.LABEL = label;
         this.property = property;
         comparator = new OWLAnnotationSectionRowComparator(editorKit.getModelManager());
+        this.maxCardinality = max;
+        this.allowXrefs = allowXrefs;
     }
 
 
@@ -45,7 +49,7 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
         for (OWLAnnotationAssertionAxiom ax : ontology.getAnnotationAssertionAxioms(annotationSubject)) {
             if (!getOWLEditorKit().getWorkspace().isHiddenAnnotationURI(ax.getAnnotation().getProperty().getIRI().toURI())) {
                 if (filterProperty.contains(ax.getAnnotation().getProperty())) {
-                    addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax));
+                    addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax, allowXrefs));
                 }
             }
             else {
@@ -132,5 +136,31 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
         }
         getOWLModelManager().applyChanges(changes);
         return true;
+    }
+
+
+
+	@Override
+	public boolean canAdd() {
+		boolean defaultCanAdd = super.canAdd();
+		if (defaultCanAdd && maxCardinality > 0) {
+			 int count = getAnnotationCount();
+			 return count < maxCardinality;
+		}
+		return defaultCanAdd;
+	}
+    
+    private int getAnnotationCount() {
+    	final OWLAnnotationSubject root = getRootObject();
+    	int count = 0;
+    	for(OWLOntology ont : getOntologies()) {
+    		Set<OWLAnnotationAssertionAxiom> axioms = ont.getAnnotationAssertionAxioms(root);
+    		for (OWLAnnotationAssertionAxiom axiom : axioms) {
+				if (this.property.equals(axiom.getProperty())) {
+					count += 1;
+				}
+			}
+    	}
+    	return count;
     }
 }
