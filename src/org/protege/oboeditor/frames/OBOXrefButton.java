@@ -15,7 +15,7 @@ public class OBOXrefButton extends MListButton {
 
         public static final Color ROLL_OVER_COLOR = new Color(0, 0, 0);
 
-        private static final String ANNOTATE_STRING = "Xref";
+        private static final String ANNOTATE_STRING = "Ref";
 
         private boolean annotationPresent = false;
 
