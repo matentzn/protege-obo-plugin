@@ -4,14 +4,15 @@ import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.ui.frame.AbstractOWLFrameSectionRow;
 import org.protege.editor.owl.ui.frame.OWLFrameSection;
 import org.protege.editor.owl.ui.frame.OWLFrameSectionRow;
-import org.protege.editor.owl.ui.renderer.OWLAnnotationCellRenderer2;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
+import org.protege.oboeditor.frames.OBOAnnotationsFrameSectionSummaryRow;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLObject;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -140,6 +141,15 @@ public class OBOFrameListRenderer  implements ListCellRenderer {
                                                                        isSelected,
                                                                        cellHasFocus);
             }
+            if (value instanceof OBOAnnotationsFrameSectionSummaryRow && annotationRendererEnabled) {
+				OBOAnnotationsFrameSectionSummaryRow summary = (OBOAnnotationsFrameSectionSummaryRow) value;
+				annotationRenderer.setReferenceOntology(row.getOntology());
+				return annotationRenderer.getListCellRendererComponent(list,
+                        summary.getManipulatableObjects(),
+                        index,
+                        isSelected,
+                        cellHasFocus);
+			}
 
             boolean commentedOut = false;
             owlCellRenderer.setCommentedOut(commentedOut);

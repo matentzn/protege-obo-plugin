@@ -4,7 +4,6 @@ import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.ui.editor.OWLObjectEditor;
 import org.protege.editor.owl.ui.frame.AbstractOWLFrameSection;
-import org.protege.editor.owl.ui.frame.OWLAnnotationsFrameSectionRow;
 import org.protege.editor.owl.ui.frame.OWLFrame;
 import org.protege.editor.owl.ui.frame.OWLFrameSectionRow;
 import org.semanticweb.owlapi.model.*;
@@ -21,48 +20,67 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
     private String LABEL;
     private final int maxCardinality;
     private final boolean allowXrefs;
+    private final boolean compact;
 
     private static OWLAnnotationSectionRowComparator comparator;
 
     final OWLAnnotationProperty property;
 
 
-    public OBOAnnotationFrameSection(OWLEditorKit editorKit, OWLFrame<? extends OWLAnnotationSubject> frame, String label, OWLAnnotationProperty property, int max, boolean allowXrefs) {
+    public OBOAnnotationFrameSection(OWLEditorKit editorKit, OWLFrame<? extends OWLAnnotationSubject> frame, String label, OWLAnnotationProperty property, int max, boolean allowXrefs, boolean compact) {
         super(editorKit, label, "Entity annotation", frame);
         this.LABEL = label;
         this.property = property;
         comparator = new OWLAnnotationSectionRowComparator(editorKit.getModelManager());
         this.maxCardinality = max;
         this.allowXrefs = allowXrefs;
+        this.compact = compact;
     }
 
 
 
     @Override
     protected void refill(OWLOntology ontology) {
-        boolean hidden = false;
+        final boolean hidden = getOWLEditorKit().getWorkspace().isHiddenAnnotationURI(property.getIRI().toURI());
         final OWLAnnotationSubject annotationSubject = getRootObject();
 
         Set<OWLAnnotationProperty> filterProperty = new HashSet<OWLAnnotationProperty>();
         filterProperty.add(property);
-
-        for (OWLAnnotationAssertionAxiom ax : ontology.getAnnotationAssertionAxioms(annotationSubject)) {
-            if (!getOWLEditorKit().getWorkspace().isHiddenAnnotationURI(ax.getAnnotation().getProperty().getIRI().toURI())) {
-                if (filterProperty.contains(ax.getAnnotation().getProperty())) {
-                    addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax, allowXrefs));
-                }
-            }
-            else {
-                hidden = true;
-            }
-        }
+        
+        
         if (hidden) {
             setLabel(LABEL + " (some annotations are hidden)");
         }
         else {
+        	Collection<OWLAnnotationAssertionAxiom> relevantAxioms = filterAxioms(ontology.getAnnotationAssertionAxioms(annotationSubject));
+        	renderAxioms(relevantAxioms, ontology, annotationSubject);
             setLabel(LABEL);
         }
 
+    }
+    
+    private Collection<OWLAnnotationAssertionAxiom> filterAxioms(Collection<OWLAnnotationAssertionAxiom> axioms) {
+    	if (axioms == null || axioms.isEmpty()) {
+			return Collections.emptySet();
+		}
+    	List<OWLAnnotationAssertionAxiom> filtered = new ArrayList<OWLAnnotationAssertionAxiom>();
+    	for(OWLAnnotationAssertionAxiom ax : axioms) {
+    		if (property.equals(ax.getProperty())) {
+    			filtered.add(ax);
+    		}
+    	}
+    	return filtered;
+    }
+    
+    private void renderAxioms(Collection<OWLAnnotationAssertionAxiom> axioms, OWLOntology ontology, OWLAnnotationSubject annotationSubject) {
+    	if (compact == false) {
+    		for (OWLAnnotationAssertionAxiom ax : axioms) {
+    			addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax, allowXrefs));
+			}
+    	}
+    	else {
+    		addRow(new OBOAnnotationsFrameSectionSummaryRow(getOWLEditorKit(), this, ontology, annotationSubject, axioms, allowXrefs));
+    	}
     }
 
     @Override
@@ -121,7 +139,6 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
         return true;
     }
 
-
     public boolean dropObjects(List<OWLObject> objects) {
         List<OWLOntologyChange> changes = new ArrayList<OWLOntologyChange>();
         for (OWLObject obj : objects) {
@@ -138,8 +155,6 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
         return true;
     }
 
-
-
 	@Override
 	public boolean canAdd() {
 		boolean defaultCanAdd = super.canAdd();
@@ -150,6 +165,10 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
 		return defaultCanAdd;
 	}
     
+	public boolean isCompact() {
+		return compact;
+	}
+	
     private int getAnnotationCount() {
     	final OWLAnnotationSubject root = getRootObject();
     	int count = 0;
@@ -163,4 +182,20 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
     	}
     	return count;
     }
+
+	@Override
+	public List<OWLAnnotationAssertionAxiom> getAxioms() {
+		List<OWLAnnotationAssertionAxiom> axioms = new ArrayList<OWLAnnotationAssertionAxiom>();
+		List<OWLFrameSectionRow<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation>> rows = getRows();
+		for (OWLFrameSectionRow<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> row : rows) {
+			if (row instanceof OBOAnnotationsFrameSectionSummaryRow) {
+				axioms.addAll(((OBOAnnotationsFrameSectionSummaryRow) row).getAxioms());
+			}
+			else {
+				axioms.add(row.getAxiom());
+			}
+		}
+		return axioms;
+	}
+    
 }

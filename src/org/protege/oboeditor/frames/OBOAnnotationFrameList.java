@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -21,6 +22,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +34,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.basic.BasicListUI;
 
-import org.apache.log4j.Logger;
 import org.protege.editor.core.ProtegeApplication;
 import org.protege.editor.core.prefs.Preferences;
 import org.protege.editor.core.prefs.PreferencesManager;
@@ -40,6 +41,7 @@ import org.protege.editor.core.ui.RefreshableComponent;
 import org.protege.editor.core.ui.list.MList;
 import org.protege.editor.core.ui.list.MListButton;
 import org.protege.editor.core.ui.list.MListItem;
+import org.protege.editor.core.ui.list.MListSectionHeader;
 import org.protege.editor.core.ui.util.InputVerificationStatusChangedListener;
 import org.protege.editor.core.ui.util.VerifiedInputEditor;
 import org.protege.editor.core.ui.util.VerifyingOptionPane;
@@ -47,7 +49,6 @@ import org.protege.editor.core.ui.wizard.Wizard;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.util.OWLAxiomInstance;
 import org.protege.editor.owl.ui.UIHelper;
-import org.protege.editor.owl.ui.axiom.AxiomAnnotationPanel;
 import org.protege.editor.owl.ui.editor.OWLObjectEditor;
 import org.protege.editor.owl.ui.explanation.ExplanationManager;
 import org.protege.editor.owl.ui.frame.AbstractOWLFrameSection;
@@ -61,7 +62,6 @@ import org.protege.editor.owl.ui.framelist.*;
 import org.protege.editor.owl.ui.preferences.GeneralPreferencesPanel;
 import org.protege.editor.owl.ui.renderer.LinkedObjectComponent;
 import org.protege.editor.owl.ui.renderer.LinkedObjectComponentMediator;
-import org.protege.editor.owl.ui.renderer.OWLRendererPreferences;
 import org.protege.editor.owl.ui.transfer.OWLObjectDataFlavor;
 import org.protege.editor.owl.ui.view.ChangeListenerMediator;
 import org.protege.editor.owl.ui.view.Copyable;
@@ -70,6 +70,7 @@ import org.protege.editor.owl.ui.view.Deleteable;
 import org.protege.editor.owl.ui.view.Pasteable;
 import org.protege.oboeditor.panel.DatabaseCrossReferencePanel;
 import org.protege.oboeditor.renderer.OBOFrameListRenderer;
+import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLObject;
@@ -84,8 +85,6 @@ import org.semanticweb.owlapi.model.RemoveAxiom;
  */
 public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComponent, DropTargetListener, Copyable, Pasteable, Cuttable, Deleteable, RefreshableComponent {
 
-    private static final Logger logger = Logger.getLogger(OBOAnnotationFrameList.class);
-
     private static final Border inferredBorder = new OWLFrameListInferredSectionRowBorder();
 
     public static final Color INFERRED_BG_COLOR = new Color(255, 255, 215);
@@ -94,6 +93,33 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
 
     public static final int BUTTON_MARGIN = 3;
 
+    private final ActionListener modifySummaryRowListener = new ActionListener() {
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			OBOAnnotationFrameList.this.handleModifySummayRow();
+		}
+	};
+    private final MListButton modifySummaryRowButton = new MListButton("Modify", Color.BLUE.darker(), modifySummaryRowListener) {
+		
+		@Override
+		public void paintButtonContent(Graphics2D g) {
+			Rectangle bounds = getBounds();
+	        int x = bounds.x;
+	        int y = bounds.y;
+	        int size = bounds.width;
+	        int quarterSize = (Math.round(bounds.width / 4.0f) / 2) * 2;
+	        g.fillOval(x + size / 2 - quarterSize, y + size / 2 - quarterSize, 2 * quarterSize, 2 * quarterSize);
+	        g.setColor(getBackground());
+	        g.fillOval(x + size / 2 - quarterSize / 2, y + size / 2 - quarterSize / 2, quarterSize, quarterSize);
+		}
+		
+		@Override
+	    protected int getSizeMultiple() {
+	        return 4;
+	    }
+	};
+    
     private OWLEditorKit editorKit;
 
     private OWLFrame<R> frame;
@@ -108,7 +134,7 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
 
     private ChangeListenerMediator changeListenerMediator;
 
-    private JPopupMenu popupMenu;
+//    private JPopupMenu popupMenu;
 
 //    private java.util.List<OBOFrameListPopupMenuAction<R>> actions;
 
@@ -218,7 +244,19 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
         return border;
     }
 
-    protected java.util.List<MListButton> getButtons(Object value) {
+    @Override
+	protected List<MListButton> getSectionButtons(MListSectionHeader header) {
+		if (header instanceof OBOAnnotationFrameSection) {
+			OBOAnnotationFrameSection section = (OBOAnnotationFrameSection) header;
+			if (section.isCompact()) {
+				return Collections.singletonList(this.modifySummaryRowButton);
+			}
+		}
+		return super.getSectionButtons(header);
+	}
+
+
+	protected java.util.List<MListButton> getButtons(Object value) {
         java.util.List<MListButton> buttons = new ArrayList<MListButton>(super.getButtons(value));
         if (value instanceof OWLFrameSectionRow) {
             OWLFrameSectionRow frameRow = (OWLFrameSectionRow) value;
@@ -344,7 +382,7 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
         for (OWLFrameSection<R, ? extends Object, ? extends Object> section : frame.getFrameSections()) {
             rows.add(section);
             for (OWLFrameSectionRow row : section.getRows()) {
-                rows.add(row);
+            	rows.add(row);
             }
         }
         setListData(rows.toArray());
@@ -368,6 +406,19 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
         editorKit.getModelManager().applyChanges(changes);
     }
 
+    
+    protected void handleModifySummayRow() {
+    	if (getRootObject() == null) {
+    		return;
+    	}
+    	final Object val = getSelectedValue();
+    	if (val instanceof OBOAnnotationFrameSection) {
+    		OBOAnnotationFrameSection section = (OBOAnnotationFrameSection) val;
+    		List<OWLAnnotationAssertionAxiom> axioms = section.getAxioms();
+    		
+    		JOptionPane.showMessageDialog(getComponent(), "TODO: placeholder for editor of compact row, axiom count: "+axioms.size());
+		}
+    }
 
     protected void handleAdd() {
         handleEdit();
