@@ -235,6 +235,24 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
 						annotations.add(AnnotationXrefContainer.create((OWLAnnotation) o));
 					}
 	        	}
+				if (!c.isEmpty()) {
+					Collections.sort(annotations, new Comparator<AnnotationXrefContainer>() {
+
+						@Override
+						public int compare(AnnotationXrefContainer c1, AnnotationXrefContainer c2) {
+							if (c1 == null && c2 == null) {
+								return 0;
+							}
+							if (c1 == null) {
+								return 1;
+							}
+							if (c2 == null) {
+								return -1;
+							}
+							return c1.annotation.compareTo(c2.annotation);
+						}
+					});
+				}
 			}
         }
         return annotations;
