@@ -431,6 +431,7 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
             }
         }
         editorKit.getModelManager().applyChanges(changes);
+        refreshComponent();
     }
 
     
