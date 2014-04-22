@@ -440,7 +440,7 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
     	}
     	final Object val = getSelectedValue();
     	if (val instanceof OBOAnnotationFrameSection) {
-    		OBOAnnotationFrameSection section = (OBOAnnotationFrameSection) val;
+    		final OBOAnnotationFrameSection section = (OBOAnnotationFrameSection) val;
     		
     		final OBOAnnotationFrameList<OWLAnnotationSubject> editorContent;
     		editorContent = new OBOAnnotationFrameList<OWLAnnotationSubject> (editorKit, new OBOAnnotationFrame(editorKit, section.createFullSection()));
@@ -451,7 +451,7 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
                 @Override
                 public void run()
                 {
-                    JFrame frame = new JFrame("Test");
+                    JFrame frame = new JFrame("Editor: " + section.getLabel());
                     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     try 
                     {
@@ -470,7 +470,6 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
                     frame.setSize(600, 400);
                     frame.setLocationByPlatform(true);
                     frame.setVisible(true);
-                    
                 }
             });
 		}
