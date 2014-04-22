@@ -1,8 +1,12 @@
 package org.protege.oboeditor.frames;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -26,7 +30,29 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JWindow;
+import javax.swing.KeyStroke;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListModel;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -58,7 +84,8 @@ import org.protege.editor.owl.ui.frame.OWLFrameListener;
 import org.protege.editor.owl.ui.frame.OWLFrameObject;
 import org.protege.editor.owl.ui.frame.OWLFrameSection;
 import org.protege.editor.owl.ui.frame.OWLFrameSectionRow;
-import org.protege.editor.owl.ui.framelist.*;
+import org.protege.editor.owl.ui.framelist.ExplainButton;
+import org.protege.editor.owl.ui.framelist.OWLFrameListInferredSectionRowBorder;
 import org.protege.editor.owl.ui.preferences.GeneralPreferencesPanel;
 import org.protege.editor.owl.ui.renderer.LinkedObjectComponent;
 import org.protege.editor.owl.ui.renderer.LinkedObjectComponentMediator;
@@ -70,7 +97,7 @@ import org.protege.editor.owl.ui.view.Deleteable;
 import org.protege.editor.owl.ui.view.Pasteable;
 import org.protege.oboeditor.panel.DatabaseCrossReferencePanel;
 import org.protege.oboeditor.renderer.OBOFrameListRenderer;
-import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLAnnotationSubject;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLObject;
@@ -414,9 +441,38 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
     	final Object val = getSelectedValue();
     	if (val instanceof OBOAnnotationFrameSection) {
     		OBOAnnotationFrameSection section = (OBOAnnotationFrameSection) val;
-    		List<OWLAnnotationAssertionAxiom> axioms = section.getAxioms();
     		
-    		JOptionPane.showMessageDialog(getComponent(), "TODO: placeholder for editor of compact row, axiom count: "+axioms.size());
+    		final OBOAnnotationFrameList<OWLAnnotationSubject> editorContent;
+    		editorContent = new OBOAnnotationFrameList<OWLAnnotationSubject> (editorKit, new OBOAnnotationFrame(editorKit, section.createFullSection()));
+    		editorContent.setRootObject((OWLAnnotationSubject) getRootObject());
+    		
+    		EventQueue.invokeLater(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    JFrame frame = new JFrame("Test");
+                    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    try 
+                    {
+                       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    } catch (Exception e) {
+                       e.printStackTrace();
+                    }
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BorderLayout());
+                    JScrollPane scroller = new JScrollPane(editorContent);
+                    scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+                    scroller.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                    panel.add(scroller);
+                    frame.getContentPane().add(BorderLayout.CENTER, panel);
+                    frame.setResizable(true);
+                    frame.setSize(600, 400);
+                    frame.setLocationByPlatform(true);
+                    frame.setVisible(true);
+                    
+                }
+            });
 		}
     }
 

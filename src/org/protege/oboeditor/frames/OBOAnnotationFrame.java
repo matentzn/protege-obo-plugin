@@ -42,4 +42,9 @@ public class OBOAnnotationFrame extends AbstractOWLFrame<OWLAnnotationSubject> {
         		factory.getOWLAnnotationProperty(OBOVocabulary.XREF.getIRI()), -1, false, true));
         refill();
     }
+    
+    public OBOAnnotationFrame(OWLEditorKit man, OBOAnnotationFrameSection section) {
+    	super(man.getModelManager().getOWLOntologyManager());
+    	addSection(section);
+    }
 }

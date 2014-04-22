@@ -38,6 +38,9 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
     }
 
 
+    public OBOAnnotationFrameSection createFullSection() {
+    	return new OBOAnnotationFrameSection(getOWLEditorKit(), getFrame(), LABEL, property, maxCardinality, allowXrefs, false);
+    }
 
     @Override
     protected void refill(OWLOntology ontology) {
