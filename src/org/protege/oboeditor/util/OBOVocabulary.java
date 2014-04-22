@@ -19,7 +19,6 @@ public enum OBOVocabulary {
     HAS_NARROW_SYNONYM("http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym"),
     DEFINITION("http://purl.obolibrary.org/obo/IAO_0000115"),
     OBO_SUBSET("http://www.geneontology.org/formats/oboInOwl#inSubset"),
-    OBO_DBXREF("http://www.geneontology.org/formats/oboInOwl#hasDbXref"),
     OBO_ID("http://www.geneontology.org/formats/oboInOwl#id"),
     OBO_ALTERNATE_ID("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId");
 

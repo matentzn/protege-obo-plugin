@@ -3,17 +3,18 @@ package org.protege.oboeditor.renderer;
 import org.coode.string.EscapeUtils;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.OWLModelManager;
-import org.protege.editor.owl.ui.list.AbstractAnnotationsList;
 import org.protege.editor.owl.ui.renderer.layout.*;
 import org.protege.oboeditor.frames.AbstractDatabaseCrossReferenceList;
+import org.protege.oboeditor.util.OBOVocabulary;
 import org.semanticweb.owlapi.model.*;
 
 import javax.swing.*;
+
 import java.awt.*;
-import java.awt.List;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,7 +65,8 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
 
     @Override
     protected Object getValueKey(Object value) {
-        return extractOWLAnnotationFromCellValue(value);
+    	List<AnnotationXrefContainer> list = extractOWLAnnotationFromCellValues(value);
+        return list.hashCode();
     }
 
 
@@ -124,6 +126,57 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private static class AnnotationXrefContainer {
+    	private OWLAnnotation annotation = null;
+    	private List<OWLAnnotation> xrefs = null;
+    	
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((annotation == null) ? 0 : annotation.hashCode());
+			result = prime * result + ((xrefs == null) ? 0 : xrefs.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			AnnotationXrefContainer other = (AnnotationXrefContainer) obj;
+			if (annotation == null) {
+				if (other.annotation != null)
+					return false;
+			} else if (!annotation.equals(other.annotation))
+				return false;
+			if (xrefs == null) {
+				if (other.xrefs != null)
+					return false;
+			} else if (!xrefs.equals(other.xrefs))
+				return false;
+			return true;
+		}
+		
+		static AnnotationXrefContainer create(OWLAnnotation annotation) {
+			AnnotationXrefContainer c = new AnnotationXrefContainer();
+			c.annotation = annotation;
+			return c;
+		}
+		
+		static AnnotationXrefContainer create(OWLAnnotation annotation, Collection<OWLAnnotation> xrefs) {
+			AnnotationXrefContainer c = create(annotation);
+			if (xrefs != null) {
+				c.xrefs = new ArrayList<OWLAnnotation>(xrefs);
+			}
+			return c;
+		}
+    }
+    
 
     /**
      * Renderes a list or table cell value if the value contains an OWLAnnotation.
@@ -135,81 +188,98 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
      * @param isSelected Whether or not the cell containing the value is selected.
      */
     private void renderCellValue(Page page, Object value, Color foreground, Color background, boolean isSelected) {
-        OWLAnnotation annotation = extractOWLAnnotationFromCellValue(value);
-        if (annotation != null) {
-//            renderAnnotationProperty(page, annotation, foreground, background, isSelected);
-            renderAnnotationValue(page, annotation, foreground, background, isSelected);
+        List<AnnotationXrefContainer> annotations = extractOWLAnnotationFromCellValues(value);
+        if (annotations != null && !annotations.isEmpty()) {
+            renderAnnotationValues(page, annotations, foreground, background, isSelected);
         }
         page.setMargin(2);
         page.setMarginBottom(20);
 
     }
-
+    
     /**
      * Extracts an OWLAnnotation from the actual value held in a cell in a list or table.
      * @param value The list or table cell value.
      * @return The OWLAnnotation contained within the value.
      */
-    protected OWLAnnotation extractOWLAnnotationFromCellValue(Object value) {
-        OWLAnnotation annotation = null;
+    protected List<AnnotationXrefContainer> extractOWLAnnotationFromCellValues(Object value) {
+    	List<AnnotationXrefContainer> annotations = Collections.emptyList();
         if (value instanceof AbstractDatabaseCrossReferenceList.AnnotationsListItem) {
-            annotation = ((AbstractDatabaseCrossReferenceList.AnnotationsListItem) value).getAnnotation();
+            OWLAnnotation annotation = ((AbstractDatabaseCrossReferenceList.AnnotationsListItem) value).getAnnotation();
+            annotations = Collections.singletonList(AnnotationXrefContainer.create(annotation));
         }
         else if (value instanceof OWLAnnotation) {
-            annotation = (OWLAnnotation) value;
+        	OWLAnnotation annotation = (OWLAnnotation) value;
+        	annotations = Collections.singletonList(AnnotationXrefContainer.create(annotation));
         }
-        return annotation;
+        else if (value instanceof Collection) {
+			Collection c = (Collection) value;
+        	if (!c.isEmpty()) {
+        		annotations = new ArrayList<AnnotationXrefContainer>(c.size());
+				for(Object o : c) {
+					if (o instanceof OWLAnnotationAssertionAxiom) {
+						OWLAnnotationAssertionAxiom ax = (OWLAnnotationAssertionAxiom) o;
+						annotations.add(AnnotationXrefContainer.create(ax.getAnnotation(), filterXrefs(ax.getAnnotations())));
+					}
+					else if (o instanceof OWLAnnotation) {
+						annotations.add(AnnotationXrefContainer.create((OWLAnnotation) o));
+					}
+	        	}
+				if (!c.isEmpty()) {
+					Collections.sort(annotations, new Comparator<AnnotationXrefContainer>() {
+
+						@Override
+						public int compare(AnnotationXrefContainer c1, AnnotationXrefContainer c2) {
+							if (c1 == null && c2 == null) {
+								return 0;
+							}
+							if (c1 == null) {
+								return 1;
+							}
+							if (c2 == null) {
+								return -1;
+							}
+							return c1.annotation.compareTo(c2.annotation);
+						}
+					});
+				}
+			}
+        }
+        return annotations;
     }
 
+    
+    private List<OWLAnnotation> filterXrefs(Collection<OWLAnnotation> annotations) {
+    	List<OWLAnnotation> xrefs = null;
+    	if (annotations != null && !annotations.isEmpty()) {
+			for (OWLAnnotation annotation : annotations) {
+				OWLAnnotationProperty property = annotation.getProperty();
+				if (OBOVocabulary.XREF.getIRI().equals(property.getIRI())) {
+					if (xrefs == null) {
+						xrefs = Collections.singletonList(annotation);
+					}
+					else if (xrefs.size() == 1) {
+						OWLAnnotation prev = xrefs.get(0);
+						xrefs = new ArrayList<OWLAnnotation>();
+						xrefs.add(prev);
+						xrefs.add(annotation);
+					}
+					else {
+						xrefs.add(annotation);
+					}
+				}
+			}
+		}
+    	return xrefs;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Formats paragraphs that were generated as a result of rendering an annotation value with global formatting such
-     * as tab count and margins.  This ensures that all paragraphs representing annotation values have the correct
-     * indentation etc.
-     * @param valueRenderingParagraphs The paragraphs to be formatted.
-     */
-    private void applyGlobalFormattingToAnnotationValueParagraphs(java.util.List<Paragraph> valueRenderingParagraphs) {
-        for (Paragraph paragraph : valueRenderingParagraphs) {
-            paragraph.setTabCount(0);
-            paragraph.setMarginBottom(2);
-        }
-    }
 
     /**
-     * Renders the annotation property into a paragraph in the page.
-     * @param page The page to insert the paragraph into.
-     * @param annotation The annotation containing the property to be rendered.
-     * @param defaultForeground The default foreground color.
-     * @param defaultBackground The default background color.
-     * @param isSelected Specifies whether the associated cell is selected or not.
-     */
-    private void renderAnnotationProperty(Page page, OWLAnnotation annotation, Color defaultForeground, Color defaultBackground, boolean isSelected) {
-        OWLAnnotationProperty property = annotation.getProperty();
-        String rendering = editorKit.getOWLModelManager().getRendering(property);
-        Paragraph paragraph = page.addParagraph(rendering);
-        Color foreground = getAnnotationPropertyForeground(defaultForeground, isSelected);
-        paragraph.setForeground(foreground);
-//        if (isReferenceOntologyActive()) {
-//            paragraph.setBold(true);
-//        }
-        if (annotation.getValue() instanceof OWLLiteral) {
-            OWLLiteral literalValue = (OWLLiteral) annotation.getValue();
-            paragraph.append("    ", foreground);
-            appendTag(paragraph, literalValue, foreground, isSelected);
-        }
-        paragraph.setMarginBottom(4);
-    }
-
-    private Color getAnnotationPropertyForeground(Color defaultForeground, boolean isSelected) {
-        return isSelected ? defaultForeground : ANNOTATION_PROPERTY_FOREGROUND;
-    }
-
-    /**
-     * Renders an annotation value into a {@link Page}.
+     * Renders annotation values into a {@link Page}.
      * @param page The page that the value should be rendered into.
      * @param annotation The annotation that contains the value to be rendered.
      * @param defaultForeground The default foreground color.
@@ -218,50 +288,22 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
      * @return A list of paragraphs that represent the rendering of the annotation value.  These paragraphs will have
      * been added to the Page specified by the page argument.
      */
-    private java.util.List<Paragraph> renderAnnotationValue(final Page page, OWLAnnotation annotation, final Color defaultForeground, final Color defaultBackground, final boolean isSelected) {
-        OWLAnnotationValue annotationValue = annotation.getValue();
-        java.util.List<Paragraph> paragraphs = annotationValue.accept(new OWLAnnotationValueVisitorEx<java.util.List<Paragraph>>() {
-            public java.util.List<Paragraph> visit(IRI iri) {
-                return renderIRI(page, iri, defaultForeground, defaultBackground, isSelected, hasFocus());
-            }
-
-            public java.util.List<Paragraph> visit(OWLAnonymousIndividual individual) {
-                return renderAnonymousIndividual(page, individual);
-            }
-
-            public java.util.List<Paragraph> visit(OWLLiteral literal) {
-                return renderLiteral(page, literal, defaultForeground, defaultBackground, isSelected);
-            }
-        });
-        applyGlobalFormattingToAnnotationValueParagraphs(paragraphs);
-        return paragraphs;
+    private List<Paragraph> renderAnnotationValues(final Page page, final List<AnnotationXrefContainer> annotations, final Color defaultForeground, final Color defaultBackground, final boolean isSelected) {
+    	StringBuilder sb = new StringBuilder();
+    	List<LinkSpan> spans = new ArrayList<LinkSpan>();
+    	for (Iterator<AnnotationXrefContainer> iterator = annotations.iterator(); iterator.hasNext();) {
+    		AnnotationXrefContainer container = iterator.next();
+			appendAnnotation(sb, spans, container, iterator.hasNext());
+		}
+    	Paragraph paragraph = new Paragraph(sb.toString(), spans);
+    	paragraph.setMargin(4);
+    	paragraph.setMarginRight(20);
+    	page.add(paragraph);
+    	return Collections.singletonList(paragraph);
     }
 
     /**
-     * Renderes an annotation value that is an IRI
-     * @param page The page that the value will be rendered into.
-     * @param iri The IRI that is the annotation value.
-     * @param defaultForeground The default foreground color.
-     * @param defaultBackgound The default background color.
-     * @param isSelected Whether or not the cell containing the annotation is selected.
-     * @param hasFocus Whether or not the cell containing the annotation has the focus.
-     * @return A list of paragraphs that represent the rendering of the annotation value.
-     */
-    private java.util.List<Paragraph> renderIRI(Page page, IRI iri, Color defaultForeground, Color defaultBackgound, boolean isSelected, boolean hasFocus) {
-        OWLModelManager modelManager = editorKit.getOWLModelManager();
-        Set<OWLEntity> entities = modelManager.getOWLEntityFinder().getEntities(iri);
-        java.util.List<Paragraph> paragraphs;
-        if (entities.isEmpty()) {
-            paragraphs = renderExternalIRI(page, iri);
-        }
-        else {
-            paragraphs = renderEntities(page, entities);
-        }
-        return paragraphs;
-    }
-
-    /**
-     * Determines whether an IRI that represents an annotation value can be opened in a web browser. i.e. wherther or
+     * Determines whether an IRI that represents an annotation value can be opened in a web browser. i.e. whether or
      * not the IRI represents a web link.
      * @param iri The iri to be tested.
      * @return <code>true</code> if the IRI represents a web link, other wise <code>false</code>.
@@ -269,44 +311,6 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
     private boolean isLinkableAddress(IRI iri) {
         String scheme = iri.getScheme();
         return scheme != null && scheme.startsWith("http");
-    }
-
-    /**
-     * Renders an IRI as a full IRI rather than as an IRI that represents an entity in the signature of the imports
-     * closure of the active ontology.
-     * @param page The page that the IRI should be rendered into.
-     * @param iri The IRI to be rendered.
-     * @return A list of paragraphs that represent the rendering of the annotation value.
-     */
-    private java.util.List<Paragraph> renderExternalIRI(Page page, IRI iri) {
-        Paragraph paragraph;
-        if (isLinkableAddress(iri)) {
-            paragraph = page.addParagraph(iri.toString(), new HTTPLink(iri.toURI()));
-        }
-        else {
-            paragraph = page.addParagraph(iri.toString());
-        }
-        return Arrays.asList(paragraph);
-    }
-
-    /**
-     * Renderes a set of entities as an annotation value.  The idea is that the annotation value is an IRI that
-     * corresponds to the IRI of entities in the imports closure of the active ontology.
-     * @param page The page that the entities will be rendered into.
-     * @param entities The entities.
-     * @return A list of paragraphs that represents the rendering of the entities.
-     */
-    private java.util.List<Paragraph> renderEntities(Page page, Set<OWLEntity> entities) {
-        java.util.List<Paragraph> paragraphs = new ArrayList<Paragraph>();
-        for (OWLEntity entity : entities) {
-            Icon icon = getIcon(entity);
-            OWLModelManager modelManager = editorKit.getOWLModelManager();
-            Paragraph paragraph = new Paragraph(modelManager.getRendering(entity), new OWLEntityLink(editorKit, entity));
-            paragraph.setIcon(icon);
-            page.add(paragraph);
-            paragraphs.add(paragraph);
-        }
-        return paragraphs;
     }
 
     /**
@@ -318,91 +322,120 @@ public class OBOAnnotationCellRenderer extends PageCellRenderer {
         return editorKit.getOWLWorkspace().getOWLIconProvider().getIcon(entity);
     }
 
-    /**
-     * Renders an annotation value that is an OWLLiteral.
-     * @param page The page that the value will be rendered into.
-     * @param literal The literal to be rendered.
-     * @param foreground The default foreground.
-     * @param background The default background.
-     * @param isSelected Whether or not the cell containing the annotation value is selected.
-     * @return A list of paragraphs that represent the rendering of the literal.
-     */
-    private java.util.List<Paragraph> renderLiteral(Page page, OWLLiteral literal, Color foreground, Color background, boolean isSelected) {
-        String rendering = EscapeUtils.unescapeString(literal.getLiteral()).trim();
-        java.util.List<Paragraph> result = new ArrayList<Paragraph>();
-        if (rendering.length() > 0) {
-            java.util.List<LinkSpan> linkSpans = extractLinks(rendering);
-            Paragraph literalParagraph = new Paragraph(rendering, linkSpans);
-            literalParagraph.setForeground(foreground);
-            page.add(literalParagraph);
-            result.add(literalParagraph);
-            Paragraph tagParagraph = literalParagraph;//new Paragraph("");
-            tagParagraph.append("    ", foreground);
-            page.add(tagParagraph);
-            result.add(tagParagraph);
-            tagParagraph.setMarginTop(2);
-            tagParagraph.setTabCount(2);
-//            appendTag(tagParagraph, literal, foreground, isSelected);
-        }
-        return result;
+    private void appendAnnotation(final StringBuilder sb, final List<LinkSpan> allLinks, final AnnotationXrefContainer container, boolean hasNext) {
+    	OWLAnnotationValue val = container.annotation.getValue();
+    	val.accept(new OWLAnnotationValueVisitor() {
+			
+			@Override
+			public void visit(OWLLiteral literal) {
+				appendLiteral(sb, allLinks, literal);
+			}
+			
+			@Override
+			public void visit(OWLAnonymousIndividual individual) {
+				appendAnonymousIndividual(sb, allLinks, individual);
+			}
+			
+			@Override
+			public void visit(IRI iri) {
+				appendIRI(sb, allLinks, iri);
+			}
+		});
+    	if (container.xrefs != null && !container.xrefs.isEmpty()) {
+    		sb.append(" [");
+    		for (Iterator<OWLAnnotation> xrefIt = container.xrefs.iterator(); xrefIt.hasNext();) {
+    			OWLAnnotation xref = xrefIt.next();
+    			xref.getValue().accept(new OWLAnnotationValueVisitor() {
+
+    				@Override
+    				public void visit(OWLLiteral xrefLiteral) {
+    					appendLiteral(sb, allLinks, xrefLiteral);
+    				}
+
+    				@Override
+    				public void visit(OWLAnonymousIndividual individual) {
+    					appendAnonymousIndividual(sb, allLinks, individual);
+    				}
+
+    				@Override
+    				public void visit(IRI iri) {
+    					appendIRI(sb, allLinks, iri);
+    				}
+    			});
+    			if (xrefIt.hasNext()) {
+    				sb.append(", ");
+    			}
+    		}
+    		sb.append("]");
+    	}
+    	if (hasNext) {
+			sb.append(", ");
+		}
+    	
     }
 
-    private void appendTag(Paragraph tagParagraph, OWLLiteral literal, Color foreground, boolean isSelected) {
-        Color tagColor = isSelected ? foreground : Color.GRAY;
-        Color tagValueColor = isSelected ? foreground : Color.GRAY;
-        if (literal.hasLang()) {
-            tagParagraph.append("[language: ", tagColor);
-            tagParagraph.append(literal.getLang(), tagValueColor);
-            tagParagraph.append("]", tagColor);
-        }
-        else if(!literal.isRDFPlainLiteral()) {
-            tagParagraph.append("[type: ", tagColor);
-            tagParagraph.append(editorKit.getOWLModelManager().getRendering(literal.getDatatype()), tagValueColor);
-            tagParagraph.append("]", tagColor);
-        }
-//        if (ontology != null) {
-//            tagParagraph.append("    ", foreground);
-//            tagParagraph.append("[in: ", tagColor);
-//            String ontologyRendering = editorKit.getOWLModelManager().getRendering(ontology);
-//            tagParagraph.append(ontologyRendering, tagColor);
-//            tagParagraph.append("]", tagColor);
-//        }
+    @SuppressWarnings("deprecation")
+	private void appendLiteral(StringBuilder sb, List<LinkSpan> allLinks, OWLLiteral literal) {
+    	int offset = sb.length();
+    	final String rendering = EscapeUtils.unescapeString(literal.getLiteral()).trim();
+    	sb.append(rendering);
+		List<LinkSpan> linkSpans = extractLinks(rendering, offset);
+		if (linkSpans != null) {
+			allLinks.addAll(linkSpans);
+		}
     }
-
-
+    
+    private void appendAnonymousIndividual(StringBuilder sb, List<LinkSpan> allLinks, OWLAnonymousIndividual individual) {
+        String rendering = editorKit.getOWLModelManager().getRendering(individual);
+        sb.append(rendering);
+    }
+    
+    private void appendIRI(StringBuilder sb, List<LinkSpan> allLinks, IRI iri) {
+    	OWLModelManager modelManager = editorKit.getOWLModelManager();
+		Set<OWLEntity> entities = modelManager.getOWLEntityFinder().getEntities(iri);
+		if (entities.isEmpty()) {
+			String rendering = iri.toString();
+			if (isLinkableAddress(iri)) {
+				int offset = sb.length();
+				allLinks.add(new LinkSpan(new HTTPLink(iri.toURI()), new Span(offset, offset+rendering.length())));
+	           
+	        }
+			sb.append(rendering);
+		}
+		else {
+			for (Iterator<OWLEntity> iterator = entities.iterator(); iterator.hasNext();) {
+				OWLEntity entity = iterator.next();
+				String rendering = modelManager.getRendering(entity);
+				int offset = sb.length();
+				allLinks.add(new LinkSpan(new OWLEntityLink(editorKit, entity), new Span(offset, offset + rendering.length())));
+				sb.append(rendering);
+				if (iterator.hasNext()) {
+					sb.append(", ");
+				}
+			}
+		}
+    }
+    
     /**
      * Extracts links from a piece of text.
      * @param s The string that represents the piece of text.
      * @return A (possibly empty) list of links.
      */
-    private java.util.List<LinkSpan> extractLinks(String s) {
+    private List<LinkSpan> extractLinks(String s, int offset) {
         Matcher matcher = URL_PATTERN.matcher(s);
-        java.util.List<LinkSpan> result = new ArrayList<LinkSpan>();
+        List<LinkSpan> result = new ArrayList<LinkSpan>();
         while (matcher.find()) {
             int start = matcher.start();
             int end = matcher.end();
             String url = s.substring(start, end);
             try {
-                result.add(new LinkSpan(new HTTPLink(new URI(url)), new Span(start, end)));
+                result.add(new LinkSpan(new HTTPLink(new URI(url)), new Span(offset+start, offset+end)));
             }
             catch (URISyntaxException e) {
                 e.printStackTrace();
             }
         }
         return result;
-    }
-
-    /**
-     * Renders an annotation value that is an anonymous individual.
-     * @param page The page that the individual should be rendered into.
-     * @param individual The individual.
-     * @return A list of paragraphs that represent the rendering of the individual.
-     */
-    private java.util.List<Paragraph> renderAnonymousIndividual(Page page, OWLAnonymousIndividual individual) {
-        String rendering = editorKit.getOWLModelManager().getRendering(individual);
-        Paragraph paragraph = page.addParagraph(rendering);
-        paragraph.setIcon(getIcon(individual));
-        return Arrays.asList(paragraph);
     }
 
 }
