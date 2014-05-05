@@ -13,6 +13,7 @@ import java.util.Set;
 public enum OBOVocabulary {
 
     XREF("http://www.geneontology.org/formats/oboInOwl#hasDbXref"),
+    OBO_NAMESPACE("http://www.geneontology.org/formats/oboInOwl#hasOBONamespace"),
     HAS_BROAD_SYNONYM("http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym"),
     HAS_EXACT_SYNONYM("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym"),
     HAS_RELATED_SYNONYM("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym"),

@@ -22,8 +22,9 @@ public class OBOAnnotationFrame extends AbstractOWLFrame<OWLAnnotationSubject> {
         addSection(new OBOAnnotationFrameSection(man, this, "Identifier",
                 factory.getOWLAnnotationProperty(OBOVocabulary.OBO_ID.getIRI()), 1, false, false));
         addSection(new OBOAnnotationFrameSection(man, this, "Alternate Identifier",
-                factory.getOWLAnnotationProperty(OBOVocabulary.OBO_ALTERNATE_ID.getIRI()), -1, false, false));
-        
+                factory.getOWLAnnotationProperty(OBOVocabulary.OBO_ALTERNATE_ID.getIRI()), -1, false, true));
+        addSection(new OBOAnnotationFrameSection(man, this, "Namespace",
+                factory.getOWLAnnotationProperty(OBOVocabulary.OBO_NAMESPACE.getIRI()), 1, false, false));
 		addSection(new OBOAnnotationFrameSection(man, this, "Definition",
                 factory.getOWLAnnotationProperty(OBOVocabulary.DEFINITION.getIRI()), 1, true, false));
         addSection(new OBOAnnotationFrameSection(man, this, "Exact synonym",
