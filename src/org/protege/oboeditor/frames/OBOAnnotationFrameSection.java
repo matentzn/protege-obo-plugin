@@ -78,11 +78,15 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
     private void renderAxioms(Collection<OWLAnnotationAssertionAxiom> axioms, OWLOntology ontology, OWLAnnotationSubject annotationSubject) {
     	if (compact == false) {
     		for (OWLAnnotationAssertionAxiom ax : axioms) {
-    			addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax, allowXrefs));
+    			if (ax != null) {
+    				addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax, allowXrefs));
+    			}
 			}
     	}
     	else {
-    		addRow(new OBOAnnotationsFrameSectionSummaryRow(getOWLEditorKit(), this, ontology, annotationSubject, axioms, allowXrefs));
+    		if (axioms != null && !axioms.isEmpty()) {
+    			addRow(new OBOAnnotationsFrameSectionSummaryRow(getOWLEditorKit(), this, ontology, annotationSubject, axioms, allowXrefs));
+    		}
     	}
     }
 
@@ -122,6 +126,15 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
 
         public int compare(OWLFrameSectionRow<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> o1,
                            OWLFrameSectionRow<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> o2) {
+        	if (o1 == o2) {
+				return 0;
+			}
+        	if (o1 == null) {
+				return 1;
+			}
+        	if (o2 == null) {
+        		return -1;
+        	}
             return owlObjectComparator.compare(o1.getAxiom(), o2.getAxiom());
         }
     }
