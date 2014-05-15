@@ -6,11 +6,9 @@ Bundle-Name: Protege OBO plugin
 Bundle-SymbolicName: org.protege.oboeditor;singleton:=true
 Bundle-Category: protege
 Bundle-Description: Plugin for viewing OBO ontologies in Protege
-Bundle-Vendor: European Bioifnromatics Institute
-Bundle-DocURL: http://ebi.ac.uk/~jupp
+Bundle-DocURL: http://github.com/hdietze/protege-obo-plugins
 Bundle-ClassPath: .,   resources/
-Update-Url: http://skoseditor.googlecode.com/svn/trunk/org.sealife.sko
- s/skos-update.properties    
+Update-Url: https://raw.githubusercontent.com/hdietze/protege-obo-plugins/master/org.protege.oboeditor.properties   
 Import-Package: org.osgi.framework,org.apache.log4j,javax.swing,javax.
  swing.event,javax.swing.tree,javax.swing.border,javax.swing.table,javax.swing.plaf,javax.swing.plaf.basic
 Bundle-Version: 0.1
