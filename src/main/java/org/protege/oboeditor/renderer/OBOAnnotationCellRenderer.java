@@ -1,6 +1,6 @@
 package org.protege.oboeditor.renderer;
 
-import org.coode.string.EscapeUtils;
+import org.semanticweb.owlapi.util.EscapeUtils;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.ui.renderer.layout.*;
