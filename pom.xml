@@ -39,8 +39,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protege.version>5.1.0</protege.version>
-        <owlapi.version>4.2.6</owlapi.version>
+        <protege.version>5.0.0</protege.version>
+        <owlapi.version>4.2.5</owlapi.version>
     </properties>
     
     <dependencies>
@@ -123,9 +123,9 @@
                         <Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
                         <Bundle-Vendor>The Protege Development Team</Bundle-Vendor>
                         <Import-Package>
-                            org.protege.editor.core.*;version="5.1.0",
-                            org.protege.editor.owl.*;version="5.1.0",
-                            org.semanticweb.owlapi.*;version="[4.2.6,5.0.0)",
+                            org.protege.editor.core.*;version="5.0.0",
+                            org.protege.editor.owl.*;version="5.0.0",
+                            org.semanticweb.owlapi.*;version="[4.2.5,5.0.0)",
                             *
                         </Import-Package>
                         <Include-Resource>{maven-resources}</Include-Resource>
