@@ -19,8 +19,7 @@ public class OBOAnnotationFrame extends AbstractOWLFrame<OWLAnnotationSubject> {
         
         final OWLDataFactory factory = man.getModelManager().getOWLDataFactory();
         
-        addSection(new OBOAnnotationFrameSection(man, this, "Identifier",
-                factory.getOWLAnnotationProperty(OBOVocabulary.OBO_ID.getIRI()), 1, false, false));
+        addSection(new OBOTermIDFrameSection(man, "Identifier", this));
         addSection(new OBOAnnotationFrameSection(man, this, "Alternate Identifier",
                 factory.getOWLAnnotationProperty(OBOVocabulary.OBO_ALTERNATE_ID.getIRI()), -1, false, true));
         addSection(new OBOAnnotationFrameSection(man, this, "Namespace",
