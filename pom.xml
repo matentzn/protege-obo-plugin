@@ -130,6 +130,7 @@
 						</Import-Package>
 						<Include-Resource>{maven-resources}</Include-Resource>
 						<Private-Package>${project.artifactId}</Private-Package>
+						<Update-Url>https://raw.githubusercontent.com/owlcollab/protege-obo-plugin/master/update.properties</Update-Url>
 					</instructions>
 				</configuration>
 			</plugin>
