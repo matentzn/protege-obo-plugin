@@ -2,14 +2,11 @@
 
 <plugin>
 
-    <extension id="OBODefinition"
-               point="org.protege.editor.core.application.ViewComponent">
+    <extension id="OBODefinition" point="org.protege.editor.core.application.ViewComponent">
         <label value="OBO annotation"/>
         <class value="org.protege.oboeditor.views.OBOAnnotationViewComponent"/>
         <headerColor value="B1CAF6"/>
         <category value="OBO"/>
     </extension>
-
-
 
 </plugin>
