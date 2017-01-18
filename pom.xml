@@ -4,7 +4,7 @@
 
 	<groupId>org.geneontology</groupId>
 	<artifactId>obo-annotations-plugin</artifactId>
-	<version>0.3.0-SNAPSHOT</version>
+	<version>0.3.0</version>
 	<packaging>bundle</packaging>
 
 	<name>OBO annotations editor</name>
