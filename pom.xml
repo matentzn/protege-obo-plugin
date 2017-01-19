@@ -7,7 +7,7 @@
 	<version>0.3.0</version>
 	<packaging>bundle</packaging>
 
-	<name>OBO annotations editor</name>
+	<name>OBO Annotations Editor</name>
 	<description>A plug-in for Protege that provides entry fields for standard OBO annotation properties.</description>
 	<organization>
 		<name>Gene Ontology Consortium</name>
