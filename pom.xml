@@ -4,7 +4,7 @@
 
 	<groupId>org.geneontology</groupId>
 	<artifactId>obo-annotations-plugin</artifactId>
-	<version>0.3.0</version>
+	<version>0.4.0</version>
 	<packaging>bundle</packaging>
 
 	<name>OBO Annotations Editor</name>
@@ -33,7 +33,7 @@
 		<developer>
 			<id>balhoff</id>
 			<name>Jim Balhoff</name>
-			<email>jim@balhoff.org</email>
+			<email>balhoff@renci.org</email>
 		</developer>
 	</developers>
 
