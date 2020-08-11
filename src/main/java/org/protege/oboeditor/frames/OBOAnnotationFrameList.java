@@ -273,12 +273,6 @@ public class OBOAnnotationFrameList<R> extends MList implements LinkedObjectComp
 
     @Override
 	protected List<MListButton> getSectionButtons(MListSectionHeader header) {
-		if (header instanceof OBOAnnotationFrameSection) {
-			OBOAnnotationFrameSection section = (OBOAnnotationFrameSection) header;
-			if (section.isCompact()) {
-				return Collections.singletonList(this.modifySummaryRowButton);
-			}
-		}
 		return super.getSectionButtons(header);
 	}
 

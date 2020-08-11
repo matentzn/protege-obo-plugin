@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 
 /**
  * @author Simon Jupp
- * @date 14/03/2014
  * Functional Genomics Group EMBL-EBI
  */
 public class OBOXrefButton extends MListButton {

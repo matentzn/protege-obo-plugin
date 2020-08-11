@@ -37,7 +37,7 @@ public class OBOAnnotationsFrameSectionRow extends AbstractOWLFrameSectionRow<OW
 
 
     protected OWLObjectEditor<OWLAnnotation> getObjectEditor() {
-        OBOAnnotationEditor editor = new OBOAnnotationEditor(getOWLEditorKit(), property);
+        OBOAnnotationEditor editor = new OBOAnnotationEditor(getOWLEditorKit(), null);
         editor.setEditedObject(getAxiom().getAnnotation());
         return editor;
     }

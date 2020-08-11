@@ -89,7 +89,7 @@ public abstract class AbstractDatabaseCrossReferenceList<O extends AnnotationCon
         if (editor == null){
 //            editor = new OWLAnnotationEditor(editorKit);
             OWLAnnotationProperty property = getOrCreateXrefProperty(editorKit);
-            editor = new OBOAnnotationEditor(editorKit, property);
+            editor = new OBOAnnotationEditor(editorKit, null);
         }
 
         editor.setEditedObject(null);
@@ -183,7 +183,7 @@ public abstract class AbstractDatabaseCrossReferenceList<O extends AnnotationCon
         public void handleEdit() {
             // don't need to check the section as only the direct imports can be added
             if (editor == null){
-                editor = new OBOAnnotationEditor(editorKit, editorKit.getOWLModelManager().getOWLDataFactory().getOWLAnnotationProperty(OBOVocabulary.XREF.getIRI()));
+                editor = new OBOAnnotationEditor(editorKit, null);
             }
             editor.setEditedObject(annot);
             UIHelper uiHelper = new UIHelper(editorKit);

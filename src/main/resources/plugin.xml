@@ -6,6 +6,7 @@
         <label value="OBO annotation"/>
         <class value="org.protege.oboeditor.views.OBOAnnotationViewComponent"/>
         <headerColor value="B1CAF6"/>
+        <headerColor value="B1CAF6"/>
         <category value="OBO"/>
     </extension>
     

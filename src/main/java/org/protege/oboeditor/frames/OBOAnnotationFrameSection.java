@@ -6,40 +6,36 @@ import org.protege.editor.owl.ui.editor.OWLObjectEditor;
 import org.protege.editor.owl.ui.frame.AbstractOWLFrameSection;
 import org.protege.editor.owl.ui.frame.OWLFrame;
 import org.protege.editor.owl.ui.frame.OWLFrameSectionRow;
+import org.protege.oboeditor.config.AnnotationElement;
 import org.semanticweb.owlapi.model.*;
 
 import java.util.*;
 
 /**
  * @author Simon Jupp
- * @date 14/03/2014
  * Functional Genomics Group EMBL-EBI
  */
 public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation> {
 
     private String LABEL;
-    private final int maxCardinality;
-    private final boolean allowXrefs;
-    private final boolean compact;
+    private final AnnotationElement annotationElement;
 
     private static OWLAnnotationSectionRowComparator comparator;
 
     final OWLAnnotationProperty property;
 
 
-    public OBOAnnotationFrameSection(OWLEditorKit editorKit, OWLFrame<? extends OWLAnnotationSubject> frame, String label, OWLAnnotationProperty property, int max, boolean allowXrefs, boolean compact) {
-        super(editorKit, label, "Entity annotation", frame);
-        this.LABEL = label;
-        this.property = property;
+    public OBOAnnotationFrameSection(OWLEditorKit editorKit, OWLFrame<? extends OWLAnnotationSubject> frame, AnnotationElement annotationElement) {
+        super(editorKit, annotationElement.getTitle(), "Entity annotation", frame);
+        this.annotationElement = annotationElement;
+        this.LABEL = annotationElement.getTitle();
+        this.property = annotationElement.getAnnotationProperty();
         comparator = new OWLAnnotationSectionRowComparator(editorKit.getModelManager());
-        this.maxCardinality = max;
-        this.allowXrefs = allowXrefs;
-        this.compact = compact;
     }
 
 
     public OBOAnnotationFrameSection createFullSection() {
-    	return new OBOAnnotationFrameSection(getOWLEditorKit(), getFrame(), LABEL, property, maxCardinality, allowXrefs, false);
+    	return new OBOAnnotationFrameSection(getOWLEditorKit(), getFrame(), annotationElement);
     }
 
     @Override
@@ -47,7 +43,7 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
         final boolean hidden = getOWLEditorKit().getWorkspace().isHiddenAnnotationURI(property.getIRI().toURI());
         final OWLAnnotationSubject annotationSubject = getRootObject();
 
-        Set<OWLAnnotationProperty> filterProperty = new HashSet<OWLAnnotationProperty>();
+        Set<OWLAnnotationProperty> filterProperty = new HashSet<>();
         filterProperty.add(property);
         
         
@@ -76,18 +72,9 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
     }
     
     private void renderAxioms(Collection<OWLAnnotationAssertionAxiom> axioms, OWLOntology ontology, OWLAnnotationSubject annotationSubject) {
-    	if (compact == false) {
-    		for (OWLAnnotationAssertionAxiom ax : axioms) {
-    			if (ax != null) {
-    				addRow(new OBOAnnotationsFrameSectionRow(getOWLEditorKit(), this, ontology, annotationSubject, ax, allowXrefs));
-    			}
-			}
-    	}
-    	else {
-    		if (axioms != null && !axioms.isEmpty()) {
-    			addRow(new OBOAnnotationsFrameSectionSummaryRow(getOWLEditorKit(), this, ontology, annotationSubject, axioms, allowXrefs));
-    		}
-    	}
+        if (axioms != null && !axioms.isEmpty()) {
+            addRow(new OBOAnnotationsFrameSectionSummaryRow(getOWLEditorKit(), this, ontology, annotationSubject, axioms, false));
+        }
     }
 
     @Override
@@ -113,7 +100,7 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
             OWLAxiom ax = man.getOWLDataFactory().getOWLDeclarationAxiom(property);
             man.applyChange(new AddAxiom(getOWLEditorKit().getModelManager().getActiveOntology(), ax));
         }
-        return new OBOAnnotationEditor(getOWLEditorKit(), property);
+        return new OBOAnnotationEditor(getOWLEditorKit(), annotationElement);
     }
 
     private static class OWLAnnotationSectionRowComparator implements Comparator<OWLFrameSectionRow<OWLAnnotationSubject, OWLAnnotationAssertionAxiom, OWLAnnotation>> {
@@ -174,30 +161,8 @@ public class OBOAnnotationFrameSection extends AbstractOWLFrameSection<OWLAnnota
 	@Override
 	public boolean canAdd() {
 		boolean defaultCanAdd = super.canAdd();
-		if (defaultCanAdd && maxCardinality > 0) {
-			 int count = getAnnotationCount();
-			 return count < maxCardinality;
-		}
 		return defaultCanAdd;
 	}
-    
-	public boolean isCompact() {
-		return compact;
-	}
-	
-    private int getAnnotationCount() {
-    	final OWLAnnotationSubject root = getRootObject();
-    	int count = 0;
-    	for(OWLOntology ont : getOntologies()) {
-    		Set<OWLAnnotationAssertionAxiom> axioms = ont.getAnnotationAssertionAxioms(root);
-    		for (OWLAnnotationAssertionAxiom axiom : axioms) {
-				if (this.property.equals(axiom.getProperty())) {
-					count += 1;
-				}
-			}
-    	}
-    	return count;
-    }
 
 	@Override
 	public List<OWLAnnotationAssertionAxiom> getAxioms() {

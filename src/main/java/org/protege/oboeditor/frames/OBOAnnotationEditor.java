@@ -7,6 +7,7 @@ import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.hierarchy.OWLAnnotationPropertyHierarchyProvider;
 import org.protege.editor.owl.ui.editor.*;
 import org.protege.editor.owl.ui.selector.OWLAnnotationPropertySelectorPanel;
+import org.protege.oboeditor.config.AnnotationElement;
 import org.protege.oboeditor.panel.DatabaseCrossReferencePanel;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
@@ -23,11 +24,12 @@ import java.util.List;
 
 /**
  * @author Simon Jupp
- * @date 14/03/2014
  * Functional Genomics Group EMBL-EBI
  */
 public class OBOAnnotationEditor extends AbstractOWLObjectEditor<OWLAnnotation> implements VerifiedInputEditor {
     protected final OWLEditorKit owlEditorKit;
+
+    private final AnnotationElement annotationElement;
 
     private JTabbedPane tabbedPane;
 
@@ -58,7 +60,7 @@ public class OBOAnnotationEditor extends AbstractOWLObjectEditor<OWLAnnotation> 
         }
     };
 
-    public OBOAnnotationEditor(OWLEditorKit owlEditorKit, OWLAnnotationProperty property) {
+    public OBOAnnotationEditor(OWLEditorKit owlEditorKit, AnnotationElement element) {
         this.owlEditorKit = owlEditorKit;
 //        tabbedPane = new JTabbedPane();
         mainPanel = new VerifiedInputJPanel();
@@ -66,8 +68,9 @@ public class OBOAnnotationEditor extends AbstractOWLObjectEditor<OWLAnnotation> 
 //        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 //        mainPanel.add(splitPane);
 
+        annotationElement = element;
         annotationPropertySelector = createAnnotationPropertySelector();
-        annotationPropertySelector.setSelection(property);
+        annotationPropertySelector.setSelection(element.getAnnotationProperty());
 //        JPanel listHolder = new JPanel(new BorderLayout());
 
 //        listHolder.add(annotationPropertySelector);
@@ -77,11 +80,11 @@ public class OBOAnnotationEditor extends AbstractOWLObjectEditor<OWLAnnotation> 
 //        splitPane.setRightComponent(tabbedPane);
 //        splitPane.setBorder(null);
 //        loadEditors();
-        final OWLConstantEditor constantEditor = new OWLConstantEditor(owlEditorKit);
-        List<OWLObjectEditor<? extends OWLAnnotationValue>> result = new ArrayList<OWLObjectEditor<? extends OWLAnnotationValue>>();
+        final AnnotationEditor constantEditor = new AnnotationEditor(owlEditorKit,element);
+        List<OWLObjectEditor<? extends OWLAnnotationValue>> result = new ArrayList<>();
         result.add(constantEditor);
         editors = result;
-        initialiseLastSelectedProperty(property);
+        initialiseLastSelectedProperty(element.getAnnotationProperty());
 
         annotationPropertySelector.addSelectionListener(new ChangeListener(){
             public void stateChanged(ChangeEvent event) {
@@ -125,7 +128,7 @@ public class OBOAnnotationEditor extends AbstractOWLObjectEditor<OWLAnnotation> 
         final IRIFromEntityEditor iriEditor = new IRIFromEntityEditor(owlEditorKit);
         iriEditor.addSelectionListener(changeListener);
 
-        final OWLConstantEditor constantEditor = new OWLConstantEditor(owlEditorKit);
+        final AnnotationEditor constantEditor = new AnnotationEditor(owlEditorKit,annotationElement);
         // @@TODO add change listener
 
         final OWLAnonymousIndividualAnnotationValueEditor anonIndividualEditor = new OWLAnonymousIndividualAnnotationValueEditor(owlEditorKit);

@@ -1,6 +1,7 @@
 package org.protege.oboeditor.views;
 
 import org.protege.editor.owl.ui.view.cls.AbstractOWLClassViewComponent;
+import org.protege.oboeditor.config.Config;
 import org.protege.oboeditor.frames.OBOAnnotationFrame;
 import org.protege.oboeditor.frames.OBOAnnotationFrameList;
 import org.semanticweb.owlapi.model.OWLAnnotationSubject;
@@ -30,6 +31,7 @@ public class OBOAnnotationViewComponent extends AbstractOWLClassViewComponent {
 
     @Override
     public void initialiseClassView() throws Exception {
+        Config.getInstance().prepareConfig("https://raw.githubusercontent.com/matentzn/protege-obo-plugin/master/src/main/resources/phenoconfig.yml");
         list = new OBOAnnotationFrameList<OWLAnnotationSubject> (getOWLEditorKit(), new OBOAnnotationFrame(getOWLEditorKit()));
         setLayout(new BorderLayout());
         add(new JScrollPane(list));
