@@ -1,0 +1,24 @@
+annotations:
+  elements:
+      - id: "label"
+        title: "Label"
+        property: "http://www.w3.org/2000/01/rdf-schema#label"
+      - id: "definition"
+        title: "definition"
+        property: "http://purl.obolibrary.org/obo/IAO_0000115"
+        annotations:
+          - property: "http://www.geneontology.org/formats/oboInOwl#hasDbXref"
+          - property: "http://www.geneontology.org/formats/oboInOwl#created_by"
+      - id: "created_by"
+        property: "http://www.geneontology.org/formats/oboInOwl#created_by"
+      - id: ""
+        property: "http://www.geneontology.org/formats/oboInOwl#creation_date"
+      - id: ""
+        property: "http://www.geneontology.org/formats/oboInOwl#hasDbXref"
+      - id: ""
+        property: "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace"
+      - id: ""
+        property: "http://www.geneontology.org/formats/oboInOwl#id"
+  dosdp_catalog: ""
+
+
