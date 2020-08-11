@@ -75,6 +75,12 @@
 			<version>2.9</version>
 			<type>maven-plugin</type>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>1.26</version>
+		</dependency>
 	</dependencies>
 
 	<build>
