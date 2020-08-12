@@ -3,17 +3,24 @@ obo_curate:
       - title: "Label"
         property: "http://www.w3.org/2000/01/rdf-schema#label"
         datatype: "XSD_STRING"
-      - title: "definition"
+        value: "Some test label"
+      - title: "Definition"
         property: "http://purl.obolibrary.org/obo/IAO_0000115"
-        datatype: "RDF_PLAIN_LITERAL"
+        datatype: "XSD_STRING"
+        language: "en"
         annotations:
           - property: "http://www.geneontology.org/formats/oboInOwl#hasDbXref"
           - property: "http://www.geneontology.org/formats/oboInOwl#created_by"
+            autocomplete: true
       - property: "http://www.geneontology.org/formats/oboInOwl#created_by"
+        autocomplete: true
       - property: "http://www.geneontology.org/formats/oboInOwl#creation_date"
+        value: "$TODAY"
       - property: "http://www.geneontology.org/formats/oboInOwl#hasDbXref"
       - property: "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace"
+        value: "$DEFAULT_OBO_NAMESPACE"
       - property: "http://www.geneontology.org/formats/oboInOwl#id"
+        value: "$CURIE"
   dosdp_catalog: "https://raw.githubusercontent.com/matentzn/protege-obo-plugin/master/src/main/resources/dosdp-catalog.yml"
 
 
